@@ -5,7 +5,8 @@
 	var Modernizr = win.Modernizr,
 		q = win.QUnit,
 		polyfill = win._fqPolyfill,
-		dataSets = [];
+		dataSets = [],
+		helpers = win.helpers;
 
 
 	dataSets.push({
@@ -85,8 +86,9 @@
 
 		},
 		testResult: function(result) {
+
 			var value = result.getValue(),
-				expected = !!Modernizr.testProp('webkitTransition');
+				expected = !!Modernizr.testProp('WebkitTransition');
 
 			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + '-webkit-transition support properly detected');
 		}
@@ -170,7 +172,7 @@
 		},
 		testResult: function(result) {
 			var value = result.getValue(),
-				expected = !!Modernizr.testProp('oTransition');
+				expected = !!Modernizr.testProp('OTransition');
 
 			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + '-o-transition support properly detected');
 		}
@@ -693,12 +695,109 @@
 
 		},
 		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
+			var value = result.getValue(),
+				expected = Modernizr.csscalc;
+
+			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + 'calc support properly detected');
+
 		}
 	});
 
+	dataSets.push({
+		desc: 'microsoft 2d transform',
+		rule: '(-ms-transform: rotate(90deg))',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '-ms-transform',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: 'rotate',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '90deg',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+				],
+		isValid: true,
+		testNodes: function(result) {
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
+			q.deepEqual(result.declarationName + ': ' + result.declarationValue, '-ms-transform: rotate(90deg)');
 
+		},
+		testResult: function(result) {
+			var value = result.getValue(),
+				expected = !!Modernizr.testProp('msTransform');
+
+			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + '-ms-transform support properly detected');
+
+		}
+	});
+
+	dataSets.push({
+		desc: 'microsoft 3d transform',
+		rule: '(-ms-perspective: 200px)',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '-ms-perspective',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '200px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+				],
+		isValid: true,
+		testNodes: function(result) {
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
+			q.deepEqual(result.declarationName + ': ' + result.declarationValue, '-ms-perspective: 200px');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue(),
+				expected = !!Modernizr.testProp('msPerspective');
+
+			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + '-ms-perspective support properly detected');
+
+		}
+	});
 
 	dataSets.push({
 		desc: 'rule with multiple values',
@@ -768,1043 +867,6 @@
 		}
 	});
 
-	dataSets.push({
-		desc: 'rule with multiple values, tabs and new lines',
-		rule: '(font-family: "Times New Roman",\n\n Arial,\r Helvetica,\t sans-serif)',
-		tokens: [
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'font-family',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '"Times New Roman",',
-						token: polyfill.TERMINALS.DOUBLE_QUOTED_CONTENT
-					},
-					{
-						sequence: 'Arial,',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: 'Helvetica,',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: 'sans-serif',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(!result.isNegated, 'node is not negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
-			q.deepEqual(result.declarationName + ': ' + result.declarationValue, 'font-family: "Times New Roman", Arial, Helvetica, sans-serif');
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});	
-
-	dataSets.push({
-		desc: 'negated rule',
-		rule: 'NOT (min-width: 30px)',
-		tokens: [
-					{
-						sequence: 'NOT',
-						token: polyfill.TERMINALS.NOT
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(result.isNegated, 'node is negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
-			q.deepEqual(result.declarationName + ': ' + result.declarationValue, 'min-width: 30px');
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(!value);
-		}
-	});
-
-
-	dataSets.push({
-		desc: 'conjunction rule',
-		rule: '(min-width: 30px) AND (max-width: 60px)',
-		tokens: [
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'AND',
-						token: polyfill.TERMINALS.AND
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(!result.isNegated, 'node is not negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'result is a conjunction node');
-			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
-
-			q.ok(!result.isNegated, 'first result node is not negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(!result.isNegated, 'second result node is not negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
-
-
-	dataSets.push({
-		desc: 'negated conjunction rule',
-		rule: 'NOT ((min-width: 30px) AND (max-width: 60px))',
-		tokens: [
-					{
-						sequence: 'NOT',
-						token: polyfill.TERMINALS.NOT
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'AND',
-						token: polyfill.TERMINALS.AND
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(result.isNegated, 'node is negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'result is a conjunction node');
-			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
-
-			q.ok(!result.conditions[0].isNegated, 'first result node is not negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(!result.conditions[1].isNegated, 'second result node is not negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
-
-
-	dataSets.push({
-		desc: 'individually negated conjunction rule',
-		rule: '(NOT (min-width: 30px)) AND (NOT (max-width: 60px))',
-		tokens: [
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'NOT',
-						token: polyfill.TERMINALS.NOT
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'AND',
-						token: polyfill.TERMINALS.AND
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'NOT',
-						token: polyfill.TERMINALS.NOT
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(!result.isNegated, 'node is not negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'result is a conjunction node');
-			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
-
-			q.ok(result.conditions[0].isNegated, 'first result node is negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(result.conditions[1].isNegated, 'second result node is negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
-
-
-	dataSets.push({
-		desc: 'disjunction rule',
-		rule: '(min-width: 30px) OR (max-width: 60px)',
-		tokens: [
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(!result.isNegated, 'node is not negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
-			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
-
-			q.ok(!result.isNegated, 'first result node is not negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(!result.isNegated, 'second result node is not negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
-
-	dataSets.push({
-		desc: 'double disjunction rule',
-		rule: '(min-width: 30px) OR (max-width: 60px) OR (width: 50px)',
-		tokens: [
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '50px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(!result.isNegated, 'node is not negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
-			q.deepEqual(result.conditions.length, 3, 'result has three sub-nodes');
-
-			q.ok(!result.isNegated, 'first result node is not negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(!result.isNegated, 'second result node is not negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
-
-			q.ok(!result.isNegated, 'third result node is not negated');
-			q.deepEqual(result.conditions[2].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[2].declarationName + ': ' + result.conditions[2].declarationValue, 'width: 50px');
-
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
-
-	dataSets.push({
-		desc: 'double disjunction with double conjunction rule',
-		rule: '((min-width: 30px) OR (max-width: 60px) OR (width: 50px)) OR ((min-width: 30px) AND (max-width: 60px) AND (width: 50px))',
-		tokens: [
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '50px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'AND',
-						token: polyfill.TERMINALS.AND
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'AND',
-						token: polyfill.TERMINALS.AND
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '50px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			/*
-
-			q.ok(result, 'node was returned');
-			q.ok(!result.isNegated, 'node is not negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
-			q.deepEqual(result.conditions.length, 3, 'result has three sub-nodes');
-
-			q.ok(!result.isNegated, 'first result node is not negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(!result.isNegated, 'second result node is not negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
-
-			q.ok(!result.isNegated, 'third result node is not negated');
-			q.deepEqual(result.conditions[2].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[2].declarationName + ': ' + result.conditions[2].declarationValue, 'width: 50px');
-
-		*/
-
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
-
-
-	dataSets.push({
-		desc: 'negated disjunction rule',
-		rule: 'NOT ((min-width: 30px) OR (max-width: 60px))',
-		tokens: [
-					{
-						sequence: 'NOT',
-						token: polyfill.TERMINALS.NOT
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(result.isNegated, 'node is negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
-			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
-
-			q.ok(!result.conditions[0].isNegated, 'first result node is not negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(!result.conditions[1].isNegated, 'second result node is not negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
-			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
-
-
-	dataSets.push({
-		desc: 'individually negated conjunction rule',
-		rule: '(NOT (min-width: 30px)) OR (NOT (max-width: 60px))',
-		tokens: [
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'NOT',
-						token: polyfill.TERMINALS.NOT
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'NOT',
-						token: polyfill.TERMINALS.NOT
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '60px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(!result.isNegated, 'node is not negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
-			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
-
-			q.ok(result.conditions[0].isNegated, 'first result node is negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result disjunction is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(result.conditions[1].isNegated, 'second result node is negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result disjunction is a condition node');
-			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
-
-
-	dataSets.push({
-		desc: 'nested condition',
-		rule: '(min-width: 30px) OR ((max-width: 40px) AND ((min-width: 50px)))',
-		tokens: [
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '30px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'OR',
-						token: polyfill.TERMINALS.OR
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'max-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '40px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: 'AND',
-						token: polyfill.TERMINALS.AND
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: '(',
-						token: polyfill.TERMINALS.OPEN_BRACKET
-					},
-					{
-						sequence: 'min-width',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ':',
-						token: polyfill.TERMINALS.DOUBLE_COLON
-					},
-					{
-						sequence: '50px',
-						token: polyfill.TERMINALS.RULENAME
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					},
-					{
-						sequence: ')',
-						token: polyfill.TERMINALS.CLOSE_BRACKET
-					}
-
-				],
-		isValid: true,
-		testNodes: function(result) {
-
-			q.ok(result, 'node was returned');
-			q.ok(!result.isNegated, 'node is not negated');
-			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
-			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
-
-			q.ok(!result.conditions[0].isNegated, 'first result node is not negated');
-			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result disjunction is a condition node');
-			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
-
-			q.ok(!result.conditions[1].isNegated, 'second result node is not negated');
-			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'second result disjunction is a conjunction node');
-			q.deepEqual(result.conditions[1].conditions.length, 2, 'second result disjunction has two sub-nodes');
-
-			q.ok(!result.conditions[1].conditions[0].isNegated, 'second result first sub-node is not negated');
-			q.deepEqual(result.conditions[1].conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result disjunction first sub-node is a condition node');
-			q.deepEqual(result.conditions[1].conditions[0].declarationName + ': ' + result.conditions[1].conditions[0].declarationValue, 'max-width: 40px');
-
-			q.ok(!result.conditions[1].conditions[1].isNegated, 'second result second sub-node is not negated');
-			q.deepEqual(result.conditions[1].conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result disjunction second sub-node is a condition node');
-			q.deepEqual(result.conditions[1].conditions[1].declarationName + ': ' + result.conditions[1].conditions[1].declarationValue, 'min-width: 50px');
-
-
-		},
-		testResult: function(result) {
-			var value = result.getValue();
-			q.ok(value);
-		}
-	});
 
 	dataSets.push({
 		desc: 'linear gradient',
@@ -2181,13 +1243,1243 @@
 
 		},
 		testResult: function(result) {
+			var value = result.getValue(),
+				expected = Modernizr.cssgradients;
+
+			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + 'gradients support properly detected');
+		}
+	});
+
+	dataSets.push({
+		desc: 'multiple backgrounds',
+		rule: '(background: url(../some/stuff), url(../other/stuff))',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'background',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: 'url',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '../some/stuff',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ',',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: 'url',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '../other/stuff',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
+			q.deepEqual(result.declarationName + ': ' + result.declarationValue, 'background: url(../some/stuff) , url(../other/stuff)');
+
+		},
+		testResult: function(result) {
+
+			var value = result.getValue(),
+				expected = Modernizr.multiplebgs;
+
+			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + 'multiple backgrounds support properly detected');
+		}
+	});
+
+
+	dataSets.push({
+		desc: 'MS transform-style: preserve-3d',
+		rule: '(-ms-transform-style: preserve-3d)',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '-ms-transform-style',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: 'preserve-3d',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
+			q.deepEqual(result.declarationName + ': ' + result.declarationValue, '-ms-transform-style: preserve-3d');
+
+		},
+		testResult: function(result) {
+
+			var value = result.getValue(),
+				expected = false,
+				style = document.querySelector('#test-elem').style;
+
+			if(typeof style.msTransformStyle === 'string') {
+				style.msTransformStyle = 'preserve-3d';
+				expected = (style.msTransformStyle === 'preserve-3d');
+				style.msTransformStyle = '';
+			}
+
+			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + '-ms-transform-style: preserve-3d support properly detected');
+		}
+	});
+
+	dataSets.push({
+		desc: 'MS transform-style: flat',
+		rule: '(-ms-transform-style: flat)',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '-ms-transform-style',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: 'flat',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
+			q.deepEqual(result.declarationName + ': ' + result.declarationValue, '-ms-transform-style: flat');
+
+		},
+		testResult: function(result) {
+
+			// modernizr doesn't support transform-style check yet
+			var value = result.getValue(),
+				expected = false,
+				style = document.querySelector('#test-elem').style;
+
+			if(typeof style.msTransformStyle === 'string') {
+				style.msTransformStyle = 'flat';
+				expected = (style.msTransformStyle === 'flat');
+				style.msTransformStyle = '';
+			}
+
+			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + '-ms-transform-style: flat support properly detected');
+		}
+	});
+
+
+	dataSets.push({
+		desc: 'rule with multiple values, tabs and new lines',
+		rule: '(font-family: "Times New Roman",\n\n Arial,\r Helvetica,\t sans-serif)',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'font-family',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '"Times New Roman",',
+						token: polyfill.TERMINALS.DOUBLE_QUOTED_CONTENT
+					},
+					{
+						sequence: 'Arial,',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: 'Helvetica,',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: 'sans-serif',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
+			q.deepEqual(result.declarationName + ': ' + result.declarationValue, 'font-family: "Times New Roman", Arial, Helvetica, sans-serif');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(value);
+		}
+	});	
+
+	dataSets.push({
+		desc: 'negated rule',
+		rule: 'NOT (min-width: 30px)',
+		tokens: [
+					{
+						sequence: 'NOT',
+						token: polyfill.TERMINALS.NOT
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(result.isNegated, 'node is negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'result is a condition node');
+			q.deepEqual(result.declarationName + ': ' + result.declarationValue, 'min-width: 30px');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(!value);
+		}
+	});
+
+
+	dataSets.push({
+		desc: 'conjunction rule',
+		rule: '(min-width: 30px) AND (max-width: 60px)',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'AND',
+						token: polyfill.TERMINALS.AND
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'result is a conjunction node');
+			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
+
+			q.ok(!result.isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(!result.isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
+
+		},
+		testResult: function(result) {
 			var value = result.getValue();
 			q.ok(value);
 		}
 	});
 
 
+	dataSets.push({
+		desc: 'negated conjunction rule',
+		rule: 'NOT ((min-width: 30px) AND (max-width: 60px))',
+		tokens: [
+					{
+						sequence: 'NOT',
+						token: polyfill.TERMINALS.NOT
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
 
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'AND',
+						token: polyfill.TERMINALS.AND
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(result.isNegated, 'node is negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'result is a conjunction node');
+			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
+
+			q.ok(!result.conditions[0].isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(!result.conditions[1].isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(!value);
+		}
+	});
+
+
+	dataSets.push({
+		desc: 'individually negated conjunction rule',
+		rule: '(NOT (min-width: 30px)) AND (NOT (max-width: 60px))',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'NOT',
+						token: polyfill.TERMINALS.NOT
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'AND',
+						token: polyfill.TERMINALS.AND
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'NOT',
+						token: polyfill.TERMINALS.NOT
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'result is a conjunction node');
+			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
+
+			q.ok(result.conditions[0].isNegated, 'first result node is negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(result.conditions[1].isNegated, 'second result node is negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(!value);
+		}
+	});
+
+
+	dataSets.push({
+		desc: 'disjunction rule',
+		rule: '(min-width: 30px) OR (max-width: 60px)',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
+			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
+
+			q.ok(!result.isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(!result.isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(value);
+		}
+	});
+
+	dataSets.push({
+		desc: 'double disjunction rule',
+		rule: '(min-width: 30px) OR (max-width: 60px) OR (width: 50px)',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '50px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
+			q.deepEqual(result.conditions.length, 3, 'result has three sub-nodes');
+
+			q.ok(!result.isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(!result.isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
+
+			q.ok(!result.isNegated, 'third result node is not negated');
+			q.deepEqual(result.conditions[2].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[2].declarationName + ': ' + result.conditions[2].declarationValue, 'width: 50px');
+
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(value);
+		}
+	});
+
+	dataSets.push({
+		desc: 'double disjunction with double conjunction rule',
+		rule: '((min-width: 30px) OR (max-width: 60px) OR (width: 50px)) OR ((min-width: 30px) AND (max-width: 60px) AND (width: 50px))',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '50px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'AND',
+						token: polyfill.TERMINALS.AND
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'AND',
+						token: polyfill.TERMINALS.AND
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '50px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
+			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
+
+			q.ok(!result.conditions[0].isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'first result condition is a disjunction node');
+			q.deepEqual(result.conditions[0].conditions.length, 3, 'first result has three sub-nodes');
+
+			q.ok(!result.conditions[0].conditions[0].isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].conditions[0].declarationName + ': ' + result.conditions[0].conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(!result.conditions[0].conditions[1].isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].conditions[1].declarationName + ': ' + result.conditions[0].conditions[1].declarationValue, 'max-width: 60px');
+
+			q.ok(!result.conditions[0].conditions[2].isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].conditions[2].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].conditions[2].declarationName + ': ' + result.conditions[0].conditions[2].declarationValue, 'width: 50px');
+
+			q.ok(!result.conditions[1].isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'second result condition is a conjunction node');
+			q.deepEqual(result.conditions[1].conditions.length, 3, 'secong result has three sub-nodes');
+
+			q.ok(!result.conditions[1].conditions[0].isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].conditions[0].declarationName + ': ' + result.conditions[1].conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(!result.conditions[1].conditions[1].isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].conditions[1].declarationName + ': ' + result.conditions[1].conditions[1].declarationValue, 'max-width: 60px');
+
+			q.ok(!result.conditions[1].conditions[2].isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].conditions[2].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].conditions[2].declarationName + ': ' + result.conditions[1].conditions[2].declarationValue, 'width: 50px');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(value);
+		}
+	});
+
+
+	dataSets.push({
+		desc: 'negated disjunction rule',
+		rule: 'NOT ((min-width: 30px) OR (max-width: 60px))',
+		tokens: [
+					{
+						sequence: 'NOT',
+						token: polyfill.TERMINALS.NOT
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(result.isNegated, 'node is negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
+			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
+
+			q.ok(!result.conditions[0].isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result condition is a condition node');
+			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(!result.conditions[1].isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result condition is a condition node');
+			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(!value);
+		}
+	});
+
+
+	dataSets.push({
+		desc: 'individually negated conjunction rule',
+		rule: '(NOT (min-width: 30px)) OR (NOT (max-width: 60px))',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'NOT',
+						token: polyfill.TERMINALS.NOT
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'NOT',
+						token: polyfill.TERMINALS.NOT
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '60px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
+			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
+
+			q.ok(result.conditions[0].isNegated, 'first result node is negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result disjunction is a condition node');
+			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(result.conditions[1].isNegated, 'second result node is negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result disjunction is a condition node');
+			q.deepEqual(result.conditions[1].declarationName + ': ' + result.conditions[1].declarationValue, 'max-width: 60px');
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(!value);
+		}
+	});
+
+
+	dataSets.push({
+		desc: 'nested condition',
+		rule: '(min-width: 30px) OR ((max-width: 40px) AND ((min-width: 50px)))',
+		tokens: [
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '30px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'OR',
+						token: polyfill.TERMINALS.OR
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'max-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '40px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: 'AND',
+						token: polyfill.TERMINALS.AND
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: '(',
+						token: polyfill.TERMINALS.OPEN_BRACKET
+					},
+					{
+						sequence: 'min-width',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ':',
+						token: polyfill.TERMINALS.DOUBLE_COLON
+					},
+					{
+						sequence: '50px',
+						token: polyfill.TERMINALS.RULENAME
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					},
+					{
+						sequence: ')',
+						token: polyfill.TERMINALS.CLOSE_BRACKET
+					}
+
+				],
+		isValid: true,
+		testNodes: function(result) {
+
+			q.ok(result, 'node was returned');
+			q.ok(!result.isNegated, 'node is not negated');
+			q.deepEqual(result.getType(), polyfill.EXPRESSION_NODES.DISJUNCTION_NODE, 'result is a disjunction node');
+			q.deepEqual(result.conditions.length, 2, 'result has two sub-nodes');
+
+			q.ok(!result.conditions[0].isNegated, 'first result node is not negated');
+			q.deepEqual(result.conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'first result disjunction is a condition node');
+			q.deepEqual(result.conditions[0].declarationName + ': ' + result.conditions[0].declarationValue, 'min-width: 30px');
+
+			q.ok(!result.conditions[1].isNegated, 'second result node is not negated');
+			q.deepEqual(result.conditions[1].getType(), polyfill.EXPRESSION_NODES.CONJUNCTION_NODE, 'second result disjunction is a conjunction node');
+			q.deepEqual(result.conditions[1].conditions.length, 2, 'second result disjunction has two sub-nodes');
+
+			q.ok(!result.conditions[1].conditions[0].isNegated, 'second result first sub-node is not negated');
+			q.deepEqual(result.conditions[1].conditions[0].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result disjunction first sub-node is a condition node');
+			q.deepEqual(result.conditions[1].conditions[0].declarationName + ': ' + result.conditions[1].conditions[0].declarationValue, 'max-width: 40px');
+
+			q.ok(!result.conditions[1].conditions[1].isNegated, 'second result second sub-node is not negated');
+			q.deepEqual(result.conditions[1].conditions[1].getType(), polyfill.EXPRESSION_NODES.CONDITION_NODE, 'second result disjunction second sub-node is a condition node');
+			q.deepEqual(result.conditions[1].conditions[1].declarationName + ': ' + result.conditions[1].conditions[1].declarationValue, 'min-width: 50px');
+
+
+		},
+		testResult: function(result) {
+			var value = result.getValue();
+			q.ok(value);
+		}
+	});
 
 
 	q.module('global object');
@@ -2281,8 +2573,39 @@
 			}
 		}
 
+	});
+
+	q.module('external CSS');
+	q.test('load external stylesheets and check if rules are applied', function() {
+
+		var limit = 3,
+			performTests = function(i, whenDone) {
+				helpers.loadCSS('test-css/' + i, function(e) {
+					var linkElem = this;
+					setTimeout(function() {
+						polyfill.styleFix.link(linkElem);
+						setTimeout(function() {
+							q.deepEqual(win.getComputedStyle(win.document.querySelector('#test-elem')).marginBottom, i + 'px', 'margin-bottom: ' + i + 'px styles properly applied');
+
+							if(i < limit) {
+								performTests(i + 1, whenDone);
+							}
+							else {
+								whenDone();
+							}
+
+						}, 100);	
+					}, 100);
+				});
+			};
+
+			q.stop();
+			performTests(0, function() {
+				q.start();
+			});
 
 	});
+
 
 
 

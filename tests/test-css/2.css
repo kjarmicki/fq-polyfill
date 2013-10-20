@@ -1,0 +1,3 @@
+@supports
+(min-width:	50px) AND
+(max-width: 30px) { #test-elem { margin-bottom: 2px; } }

@@ -1391,3 +1391,14 @@ window.Modernizr = (function( window, document, undefined ) {
     return Modernizr;
 
 })(this, this.document);
+
+Modernizr.addTest('csscalc', function() {
+    var prop = 'width:';
+    var value = 'calc(10px);';
+    var el = document.createElement('div');
+
+    el.style.cssText = prop + Modernizr._prefixes.join(value + prop);
+
+    return !!el.style.length;
+});
+

@@ -1,3 +1,14 @@
+/*
+ * Feature Queries (@supports) polyfill v0.7
+ *
+ *
+ * Drop-in polyfill for window.CSS.supports and @supports CSS rules
+ * Licensed MIT
+ *
+ * @author Krystian Jarmicki
+ * @preserve
+ */
+
 ;(function(win) {
 
 	'use strict';
@@ -19,8 +30,14 @@
 
 	};
 
+	var $ = function(selector) {
+		return Array.prototype.slice.call(win.document.querySelectorAll(selector));
+	};
+
+
 	var fqPolyfill = win._fqPolyfill = {};
 
+	// terminal symbols used in @supports rule parsing
 	fqPolyfill.TERMINALS = {
 		_END: 0,
 		OR: 1,
@@ -42,9 +59,9 @@
 	};
 
 	fqPolyfill.EXPRESSION_NODES = {
-		CONDITION_NODE: 0,
-		CONJUNCTION_NODE: 1,
-		DISJUNCTION_NODE: 2
+		CONDITION_NODE: 0, // simple condition
+		CONJUNCTION_NODE: 1, // AND condition
+		DISJUNCTION_NODE: 2 // OR condition
 	};
 
 
@@ -52,57 +69,344 @@
 		
 		this.tokenizer.init();
 
-		if(!this.supportsJS()) {
-			this.augmentJS();
+		if(!this.checker.supportsJS()) {
+			this.checker.augmentJS();
 		}
+
+		if(!this.checker.supportsCSS() || true) {
+			this.checker.watchCSS();
+		}
+
+	};
+
+	fqPolyfill.checker = {
+		
+		supportsJS: function() {
+			return (typeof win.CSS === 'object' && typeof win.CSS.supports === 'function');
+		},
+
+		augmentJS: function() {
+
+			if(typeof win.CSS === 'undefined') {
+				win.CSS = {};
+			}
+		
+			win.CSS.supports = function(rule, value) {
+
+				var check = (typeof value === 'string' || typeof value === 'number') ? rule + ': ' + value : rule;
+			
+				return (fqPolyfill.parser.parse(fqPolyfill.tokenizer.tokenize(check))).getValue();
+
+			};
+		},
+
+		supportsCSS: function() {
+
+			var styleElem = win.document.createElement('style'),
+				testElem = win.document.createElement('div'),
+				body = win.document.body,
+				rules = '#fqPolyfillTestElem { display: block; } ' + 
+						'@supports (display: inline) { #fqPolyfillTestElem { display: inline; } }',
+				result;
+
+
+			testElem.id = 'fqPolyfillTestElem';
+			styleElem.appendChild(win.document.createTextNode(rules));
+
+			body.appendChild(styleElem);
+			body.appendChild(testElem);
+
+			result = (win.getComputedStyle(testElem).display === 'inline');
+
+			body.removeChild(styleElem);
+			body.removeChild(testElem);
+
+			return result;
+
+		},
+
+		// run styleFix when ready
+		watchCSS: function() {
+
+			fqPolyfill.styleFix.register(this.augmentCSS.bind(this));
+		
+			setTimeout(function() {
+				$('link[rel="stylesheet"]').forEach(fqPolyfill.styleFix.link);
+			}, 10);
+
+			win.document.addEventListener('DOMContentLoaded', fqPolyfill.styleFix.process, false);
+		},
 
 		/*
-		if(!this.supportsCSS()) {
-			this.augmentCSS();
-		}
-		*/
+		 * CSS augmentation works like this:
+		 *
+		 * grab all the @supports rules with declarations depending on them,
+		 * for each part,
+		 *  check if browser supports the rule,
+		 *   if it does - strip @supports rule (that will make browser parse the declarations)
+		 *   if it doesn't - strip @supports rule with it's declarations
+		 */
+		augmentCSS: function(css, raw, element) {
 
-	};
+			var supportsParts;
 
-	fqPolyfill.supportsJS = function() {
-		return (typeof win.CSS === 'object' && typeof win.CSS.supports === 'function');
-	};
+			css = this.deleteCSSComments(css);
+			supportsParts = this.findSupportsParts(css);
 
-	fqPolyfill.augmentJS = function() {
+			if(supportsParts.length > 0) {
+				supportsParts.forEach(function(part) {
+					css = css.replace(part, this.substituteSupportsPart(part));
+				}.bind(this));
+			}
 
-		if(typeof win.CSS === 'undefined') {
-			win.CSS = {};
-		}
+			return css;
+		},
+
+		findSupportsParts: function(css) {
+			
+			var atRuleIndex,
+				foundText,
+				foundAll = [];
+
+			while((atRuleIndex = css.indexOf('@supports')) !== -1) {
+				foundText = this.getRulesInParens(css.slice(atRuleIndex));
+				foundAll.push(foundText);
+				css = css.replace(foundText, '');
+			}
+
+			return foundAll;
+
+		},
+
+		getRulesInParens: function(css) {
+
+			var parensCounter = 0,
+				rules = '',
+				open,
+				close;
+
+			do {
+
+				open = css.indexOf('{');
+				close = css.indexOf('}');
+
+				if(open < close && open !== -1) {
+					parensCounter++;
+					rules += css.slice(0, open + 1);
+					css = css.slice(open + 1);
+				}
+				else if(close !== -1) {
+					parensCounter--;	
+					rules += css.slice(0, close + 1);
+					css = css.slice(close + 1);
+				}
+
+			} while(parensCounter > 0 && (open !== -1 || close !== -1) /* sanity check */ && parensCounter < 5);
+
+
+			return rules;
+
+		},
 		
-		win.CSS.supports = function(rule) {
-			return (fqPolyfill.parser.parse(fqPolyfill.tokenizer.tokenize(rule))).getValue();
-		};
+		substituteSupportsPart: function(part) {
+
+			var atRule = part.replace('@supports', ''),
+				declarationsBody;
+			
+			// find @supports declaration rule
+			atRule = atRule.slice(0, atRule.indexOf('{')).trim();
+
+			// if rule is supported, return declarations for the rule
+			if((fqPolyfill.parser.parse(fqPolyfill.tokenizer.tokenize(atRule))).getValue()) {
+				declarationsBody = part.slice(part.indexOf('{') + 1, part.length - 1);
+				
+				return declarationsBody;
+			}
+			// otherwise, return empty string
+			else {
+				return '';
+			}
+
+		},
+
+		deleteCSSComments: function(str) {
+
+			var start = str.indexOf('/*'),
+				end = str.indexOf('*/') + 2,
+				found = false;
+			
+			if(start > -1) {
+				if(end === -1 || start > end) {
+					throw 'Parse error: unterminated comment';
+				}
+				str = str.replace(
+					str.substr(start, end - start), ''
+				);
+
+				return this.deleteCSSComments(str);
+			}
+
+			return str;
+
+		}
+
 	};
 
-	fqPolyfill.supportsCSS = function() {
 
-		var styleElem = document.createElement('style'),
-			testElem = document.createElement('div'),
-			body = document.body,
-			rules = '#fqPolyfillTestElem { display: block; } ' + 
-					'@supports (display: inline) { #fqPolyfillTestElem { display: inline; } }',
-			result;
+	/**
+	 * StyleFix 1.0.3 (adjusted to fqPolyfill)
+	 * @author Lea Verou
+	 * MIT license
+	 */
 
+	fqPolyfill.styleFix = {
 
-		testElem.id = 'fqPolyfillTestElem';
-		styleElem.appendChild(document.createTextNode(rules));
+		postfix: 'fqpolyfill',
 
-		body.appendChild(styleElem);
-		body.appendChild(testElem);
+		link: function(link) {
+			try {
+				// Ignore stylesheets with data-{fqPolyfill.postfix} attribute as well as alternate stylesheets
+				if(link.rel !== 'stylesheet' || link.hasAttribute('data-' + fqPolyfill.postfix)) {
+					return;
+				}
+			}
+			catch(e) {
+				return;
+			}
 
-		result = (win.getComputedStyle(testElem).display === 'inline');
+			var url = link.href || link.getAttribute('data-href'),
+				base = url.replace(/[^\/]+$/, ''),
+				base_scheme = (/^[a-z]{3,10}:/.exec(base) || [''])[0],
+				base_domain = (/^[a-z]{3,10}:\/\/[^\/]+/.exec(base) || [''])[0],
+				base_query = /^([^?]*)\??/.exec(url)[1],
+				parent = link.parentNode,
+				xhr = new XMLHttpRequest(),
+				process;
 
-		body.removeChild(styleElem);
-		body.removeChild(testElem);
+			xhr.onreadystatechange = function() {
+				if(xhr.readyState === 4) {
+					process();
+				}
+			};
 
-		return result;
+			process = function() {
 
+				var css = xhr.responseText;
+
+				if(css && link.parentNode && (!xhr.status || xhr.status < 400 || xhr.status > 600)) {
+					css = fqPolyfill.styleFix.fix(css, true, link);
+
+					// Convert relative URLs to absolute, if needed
+					if(base) {
+						css = css.replace(/url\(\s*?((?:"|')?)(.+?)\1\s*?\)/gi, function($0, quote, url) {
+							if(/^([a-z]{3,10}:|#)/i.test(url)) { // Absolute & or hash-relative
+								return $0;
+							}
+							else if(/^\/\//.test(url)) { // Scheme-relative
+								// May contain sequences like /../ and /./ but those DO work
+								return 'url("' + base_scheme + url + '")';
+							}
+							else if(/^\//.test(url)) { // Domain-relative
+								return 'url("' + base_domain + url + '")';
+							}
+							else if(/^\?/.test(url)) { // Query-relative
+								return 'url("' + base_query + url + '")';
+							}
+							else {
+								// Path-relative
+								return 'url("' + base + url + '")';
+							}
+						});
+
+						// behavior URLs shoudn’t be converted (Issue #19)
+						// base should be escaped before added to RegExp (Issue #81)
+						var escaped_base = base.replace(/([\\\^\$*+[\]?{}.=!:(|)])/g,"\\$1");
+						css = css.replace(new RegExp('\\b(behavior:\\s*?url\\(\'?"?)' + escaped_base, 'gi'), '$1');
+					}
+
+					var style = win.document.createElement('style');
+
+					style.textContent = css;
+					style.media = link.media;
+					style.disabled = link.disabled;
+					style.setAttribute('data-href', link.getAttribute('href'));
+
+					parent.insertBefore(style, link);
+					parent.removeChild(link);
+
+					style.media = link.media; // Duplicate is intentional. See issue #31
+				}
+			};
+
+			try {
+				xhr.open('GET', url);
+				xhr.send(null);
+			} catch (e) {
+				// Fallback to XDomainRequest if available
+				if (typeof XDomainRequest !== "undefined") {
+					xhr = new XDomainRequest();
+					xhr.onerror = xhr.onprogress = function() {};
+					xhr.onload = process;
+					xhr.open("GET", url);
+					xhr.send(null);
+				}
+			}
+
+			link.setAttribute('data-' + fqPolyfill.styleFix.postfix + 'progress', '');
+		},
+
+		styleElement: function(style) {
+			if (style.hasAttribute('data-' + fqPolyfill.styleFix.postfix)) {
+				return;
+			}
+			var disabled = style.disabled;
+
+			style.textContent = fqPolyfill.styleFix.fix(style.textContent, true, style);
+
+			style.disabled = disabled;
+		},
+
+		styleAttribute: function(element) {
+			var css = element.getAttribute('style');
+
+			css = fqPolyfill.styleFix.fix(css, false, element);
+
+			element.setAttribute('style', css);
+		},
+
+		process: function() {
+			// Linked stylesheets
+			$('link[rel="stylesheet"]:not([data-' + fqPolyfill.styleFix.postfix + 'progress])').forEach(fqPolyfill.styleFix.link);
+
+			// Inline stylesheets
+			$('style').forEach(fqPolyfill.styleFix.styleElement);
+
+			// Inline styles
+			$('[style]').forEach(fqPolyfill.styleFix.styleAttribute);
+		},
+
+		register: function(fixer, index) {
+			(fqPolyfill.styleFix.fixers = fqPolyfill.styleFix.fixers || [])
+			.splice(index === undefined? fqPolyfill.styleFix.fixers.length : index, 0, fixer);
+		},
+
+		fix: function(css, raw, element) {
+			for(var i=0; i < fqPolyfill.styleFix.fixers.length; i++) {
+				css = fqPolyfill.styleFix.fixers[i](css, raw, element) || css;
+			}
+
+			return css;
+		},
+
+		camelCase: function(str) {
+			return str.replace(/-([a-z])/g, function($0, $1) { return $1.toUpperCase(); }).replace('-','');
+		},
+
+		deCamelCase: function(str) {
+			return str.replace(/[A-Z]/g, function($0) { return '-' + $0.toLowerCase(); });
+		}
 	};
+	// end of StyleFix 1.0.3 (adjusted to fqPolyfill)
 
 
 	fqPolyfill.tokenizer = {
@@ -125,34 +429,11 @@
 		},
 
 		sanitize: function(str) {
-
-			var deleteComments = function(str) {
-
-				var start = str.indexOf('/*'),
-					end = str.indexOf('*/') + 2,
-					found = false;
-				
-				if(start > -1) {
-					if(end === -1 || start > end) {
-						throw 'Parse error: unterminated comment';
-					}
-					str = str.replace(
-						str.substr(start, end - start), ''
-					);
-
-					return deleteComments(str);
-				}
-
-				return str;
-
-			};
 			
 			str = str
 					.replace(fqPolyfill.CHARACTER_SETS.NEWLINE_N, ' ')
 					.replace(fqPolyfill.CHARACTER_SETS.NEWLINE_R, ' ')
 					.trim();
-
-			str = deleteComments(str);
 
 			return str;
 
@@ -198,12 +479,12 @@
 
 	fqPolyfill.supportChecker = {
 
-		testLiterally: ['transform-style'],
+		testLiterally: [/[tT]?ransformStyle$/],
 		
 		inject: function(declaration, useDOM, testFunc) {
 			
-			var testElem = document.createElement('div'),
-				body = document.body,
+			var testElem = win.document.createElement('div'),
+				body = win.document.body,
 				result;
 
 			if(useDOM) {
@@ -235,22 +516,24 @@
 
 		declaration: function(declarationName, declarationValue) {
 
-			var that = this,
-				result,
+			var result,
 				declaration = declarationName + ': ' + declarationValue,
 				camelDeclarationName = this.camelize(declarationName),
+				i,
 
 				test = function(against, useDOM) {
-					return that.inject(declaration, !!useDOM, function(testElem) {
+					return this.inject(declaration, !!useDOM, function(testElem) {
 						return (typeof testElem.style[camelDeclarationName] === 'string' && against(testElem));
 					});
-				};
+				}.bind(this);
 
 			// all the literate values
-			if(this.testLiterally.indexOf(declarationName) !== -1) {
-				result = test(function(testElem) {
-					return (testElem.style[camelDeclarationName] === declarationValue);
-				});
+			for(i = 0; i < this.testLiterally.length; i++) {
+				if(this.testLiterally[i].exec(camelDeclarationName)) {
+					result = test(function(testElem) {
+						return (testElem.style[camelDeclarationName] === declarationValue);
+					}, true);
+				}
 			}
 
 			// rgba colors
@@ -267,15 +550,22 @@
 				}, true);
 			}
 
+			// gradients
+			if(declarationValue.indexOf('-gradient(') !== -1 && result !== false) {
+				result = test(function(testElem) {
+					return (testElem.style[camelDeclarationName].indexOf('gradient') !== -1);
+				}, true);
+			}
+
 			// multiple backgrounds
-			if(declarationName.indexOf('background') !== -1 && declarationValue.indexOf(',') !== -1 && result !== false) {
+			if(declarationName.indexOf('background') !== -1 && declarationValue.indexOf(',') !== -1 && declarationValue.indexOf('-gradient(') === -1 && result !== false) {
 				declarationName = camelDeclarationName = 'background';
 				declarationValue = 'url(https://),url(https://),red url(https://)';
 				declaration = declarationName + ': ' + declarationValue,
 				result = test(function(testElem) {
 					return (/(url\s*\(.*?){3}/).test(testElem.style.background);
 				}, true);
-			}
+			}	
 
 			// calc
 			if(declarationValue.indexOf('calc(') !== -1 && result !== false) {
@@ -425,8 +715,8 @@
 		var result = false,
 			i;
 
-		for(i = 0; i < this.conditions; i++) {
-			if(this.condition.getValue() === true) {
+		for(i = 0; i < this.conditions.length; i++) {
+			if(this.conditions[i].getValue() === true) {
 				result = true;
 				break;
 			}

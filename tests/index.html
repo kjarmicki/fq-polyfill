@@ -4,15 +4,22 @@
 	<meta charset="UTF-8">
 	<title>Feature Query Polyfill tests</title>
 	<link rel="stylesheet" href="qunit-1.12.0.css">
+	<style>
+		#test-elem {
+			margin-bottom: -1px;
+		}
+	</style>
 </head>
 <body>
 
 	<div id="qunit"></div>
 	<div id="qunit-fixture"></div>
+	<div id="test-elem"></div>
 
 	<script src="qunit-1.12.0.js"></script>
 	<script src="modernizr.js"></script>
-	<script src="../fqpolyfill.js"></script>
+	<script src="../fqpolyfill.min.js"></script>
+	<script src="test-helpers.js"></script>
 	<script src="tests.js"></script>
 </body>
 </html>

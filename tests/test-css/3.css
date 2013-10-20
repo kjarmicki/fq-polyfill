@@ -1,0 +1,11 @@
+#some-stuff {
+	border-radius: 30px;
+}
+
+@supports (min-width: 50px) {
+	#test-elem { margin-bottom: 3px; }
+}
+
+#other-stuff {
+	border-radius: 30px;
+}
