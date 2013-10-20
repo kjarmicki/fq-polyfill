@@ -21,7 +21,7 @@ Load the script into a page and let it roll.
 
 #### Rules parsing:
 
-* Don't be a declaration ninja. Multi-testing stuff like ```css background: rgba(0,0,0,.3) -webkit-linear-gradient(bottom, rgb(206,68,29) 7%, rgb(248,96,56) 54%)``` will most likely fail. Use one test declaration per rule
+* Don't be a declaration ninja. Multi-testing stuff like ```background: rgba(0,0,0,.3) -webkit-linear-gradient(bottom, rgb(206,68,29) 7%, rgb(248,96,56) 54%)``` will most likely fail. Use one test declaration per rule
 * For 2d transforms, test transform property. For 3d transforms, test perspective property
 
 
