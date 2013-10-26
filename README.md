@@ -22,12 +22,46 @@ Load the script into a page and let it roll.
 #### Rules parsing:
 
 * Don't be a declaration ninja. Multi-testing stuff like ```background: rgba(0,0,0,.3) -webkit-linear-gradient(bottom, rgb(206,68,29) 7%, rgb(248,96,56) 54%)``` will most likely fail. Use one test declaration per rule
-* For 2d transforms, test transform property. For 3d transforms, test perspective property
+* For 2d transforms, test ```transform``` property. For 3d transforms, test ```perspective``` property
 
 
 ## How it works:
 
 Use the source, Luke. But the big picture is: find all the styles, parse @support rules, use custom checks to determine support and then inject fixed styles.
+Checking support is done with dedicated tests (see section Extending). If no dedicated test was found for a particular rule, it will fall back to simple property existence check, for example: 
+```javascript
+typeof document.createElement('div').style.transition === 'string';
+```
+
+## Extending
+
+Polyfill comes with dedicated tests for some of the most often used CSS3 properties, but you can easily extend it with your own tests.
+Use ```window.fqPolyfill.addTest``` for that.
+This method takes one argument, which is a callback function. That function recieves one argument, an object, with following properties:
+```javascript
+{
+	testElem: reference to <div> element injected into document body with declaration styles to test (ie. ```document.createElement('div').style.cssText = 'background-color: rgba(0,0,0,.3)'```),
+	declarationName: name of the tested declaration (ie. ```background-color```),
+	camelDeclarationName: as above, but camelCased (ie. ```backgroundColor```),
+	declarationValue: value of the tested declaration (ie. ```rgba(0,0,0,.3)```)
+}
+```
+Callback function should return one of 3 values:
+* ```true``` for test passed or 
+* ```false``` for test failed or 
+* ```undefined``` for incompetent test. If this option is confusing, think of it like that: for each @supports rule each declared test is being fired, so if we're testing ```transition``` support, then ```rgba``` test is incompetent in this case.
+
+Whole example goes like this:
+```javascript
+fqPolyfill.addTest(function(data) {
+	if(data.declarationValue.indexOf('rgba(') !== -1) { 
+		return data.testElem.style[data.camelDeclarationName].indexOf('rgba(') !== -1; // returns true or false if declaration has 'rgba(' string
+	}
+	// returns undefined if it doesn't
+});
+```
+
+For more examples, you can refer to source code, method ```fqPolyfill.supportChecker.init``` contains all core tests.
 
 ## Browser support
 
@@ -35,6 +69,7 @@ Newest Chrome, Firefox, Safari, Opera, IE9+
 
 ## Changelog
 
+* 26.10.2013 - Added interface for custom tests declaration, v0.8
 * 20.10.2013 - Release into the wild, v0.7
 
 ## Credits

@@ -1,5 +1,5 @@
 /*
- * Feature Queries (@supports) polyfill v0.7
+ * Feature Queries (@supports) polyfill v0.8
  *
  *
  * Drop-in polyfill for window.CSS.supports and @supports CSS rules
@@ -35,7 +35,7 @@
 	};
 
 
-	var fqPolyfill = win._fqPolyfill = {};
+	var fqPolyfill = win.fqPolyfill = {};
 
 	// terminal symbols used in @supports rule parsing
 	fqPolyfill.TERMINALS = {
@@ -68,6 +68,7 @@
 	fqPolyfill.init = function() {
 		
 		this.tokenizer.init();
+		this.supportChecker.init();
 
 		if(!this.checker.supportsJS()) {
 			this.checker.augmentJS();
@@ -479,27 +480,82 @@
 
 	fqPolyfill.supportChecker = {
 
-		testLiterally: [/[tT]?ransformStyle$/],
-		
-		inject: function(declaration, useDOM, testFunc) {
+		tests: [],
+
+		cachedElem: win.document.createElement('div'),
+
+		init: function() {
+
+			// add dedicated tests
+
+			// rgba colors
+			this.addTest(function(data) {
+				if(data.declarationValue.indexOf('rgba(') !== -1) {
+					return data.testElem.style[data.camelDeclarationName].indexOf('rgba(') !== -1;
+				}
+			});
+
+			// hsla colors
+			this.addTest(function(data) {
+				if(data.declarationValue.indexOf('hsla(') !== -1) {
+					return (data.testElem.style[data.camelDeclarationName].indexOf('rgba(') !== -1 || data.testElem.style[data.camelDeclarationName].indexOf('hsla(') !== -1);
+				}
+			});
+
+			// gradients
+			this.addTest(function(data) {
+				if(data.declarationValue.indexOf('-gradient(') !== -1) {
+					return (data.testElem.style[data.camelDeclarationName].indexOf('gradient') !== -1);
+				}
+			});
+
+			// multiple backgrounds
+			this.addTest(function(data) {
+				if(data.declarationName.indexOf('background') !== -1 && data.declarationValue.indexOf(',') !== -1 && data.declarationValue.indexOf('-gradient(') === -1) {
+					data.testElem.style.background = 'url(https://),url(https://),red url(https://)';
+					return (/(url\s*\(.*?){3}/).test(data.testElem.style.background);
+				}
+			});
+			
+			// calc
+			this.addTest(function(data) {
+				if(data.declarationValue.indexOf('calc(') !== -1) {
+					return (data.testElem.style[data.camelDeclarationName].indexOf('calc(') !== -1);
+				}
+			});
+
+			// transform-style: preserve-3d
+			this.addTest(function(data) {
+				if(data.declarationName.indexOf('transform-style') !== -1 && data.declarationValue === 'preserve-3d') {
+					return (data.testElem.style[data.camelDeclarationName] === 'preserve-3d');
+				}
+			});
+			
+		},
+
+		addTest: function(testFunc) {
+			this.tests.push(testFunc);
+		},
+
+		inject: function(declaration, testFunc) {
 			
 			var testElem = win.document.createElement('div'),
 				body = win.document.body,
 				result;
 
-			if(useDOM) {
-				testElem.style.cssText = declaration;
-				body.appendChild(testElem);
-			}
+			testElem.style.cssText = declaration;
+			body.appendChild(testElem);
 
 			result = testFunc(testElem);
 
-			if(useDOM) {
-				testElem.parentNode.removeChild(testElem);
-			}
+			testElem.parentNode.removeChild(testElem);
 
 			return !!result; 
 
+		},
+
+		styleExists: function(camelDeclarationName) {
+			return (typeof this.cachedElem.style[camelDeclarationName] === 'string');
 		},
 
 		camelize: function(str) {
@@ -519,67 +575,29 @@
 			var result,
 				declaration = declarationName + ': ' + declarationValue,
 				camelDeclarationName = this.camelize(declarationName),
-				i,
+				i;
 
-				test = function(against, useDOM) {
-					return this.inject(declaration, !!useDOM, function(testElem) {
-						return (typeof testElem.style[camelDeclarationName] === 'string' && against(testElem));
-					});
-				}.bind(this);
-
-			// all the literate values
-			for(i = 0; i < this.testLiterally.length; i++) {
-				if(this.testLiterally[i].exec(camelDeclarationName)) {
-					result = test(function(testElem) {
-						return (testElem.style[camelDeclarationName] === declarationValue);
-					}, true);
+			// try dedicated test
+			for(i = 0; i < this.tests.length; i++) {
+				if(typeof result === 'undefined') {
+					// in dedicated test:
+					// true means test pass
+					// false means test fail
+					// undefined means this test is not meant for this property
+					this.inject(declaration, function(testElem) {
+						result = this.tests[i]({
+							testElem: testElem,
+							declarationName: declarationName,
+							declarationValue: declarationValue,
+							camelDeclarationName: camelDeclarationName
+						});
+					}.bind(this));
 				}
-			}
-
-			// rgba colors
-			if(declarationValue.indexOf('rgba(') !== -1) {
-				result = test(function(testElem) {
-					return (testElem.style[camelDeclarationName].indexOf('rgba(') !== -1);
-				}, true);
-			}
-
-			// hsla colors
-			if(declarationValue.indexOf('hsla(') !== -1 && result !== false) {
-				result = test(function(testElem) {
-					return (testElem.style[camelDeclarationName].indexOf('rgba(') !== -1 || testElem.style[camelDeclarationName].indexOf('hsla(') !== -1);
-				}, true);
-			}
-
-			// gradients
-			if(declarationValue.indexOf('-gradient(') !== -1 && result !== false) {
-				result = test(function(testElem) {
-					return (testElem.style[camelDeclarationName].indexOf('gradient') !== -1);
-				}, true);
-			}
-
-			// multiple backgrounds
-			if(declarationName.indexOf('background') !== -1 && declarationValue.indexOf(',') !== -1 && declarationValue.indexOf('-gradient(') === -1 && result !== false) {
-				declarationName = camelDeclarationName = 'background';
-				declarationValue = 'url(https://),url(https://),red url(https://)';
-				declaration = declarationName + ': ' + declarationValue,
-				result = test(function(testElem) {
-					return (/(url\s*\(.*?){3}/).test(testElem.style.background);
-				}, true);
 			}	
 
-			// calc
-			if(declarationValue.indexOf('calc(') !== -1 && result !== false) {
-				result = test(function(testElem) {
-					return (testElem.style[camelDeclarationName].indexOf('calc(') !== -1);
-				}, true);
-			}
-
-
-			// simple property existence check
+			// dedicated test not found, fall to simple property existence check
 			if(typeof result === 'undefined') {
-				result = test(function(testElem) {
-					return true;
-				});
+				result = this.styleExists(camelDeclarationName);
 			}
 			
 
@@ -588,6 +606,8 @@
 		}
 	
 	};
+
+	fqPolyfill.addTest = fqPolyfill.supportChecker.addTest.bind(fqPolyfill.supportChecker);
 
 
 	/*

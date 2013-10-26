@@ -4,7 +4,7 @@
 
 	var Modernizr = win.Modernizr,
 		q = win.QUnit,
-		polyfill = win._fqPolyfill,
+		polyfill = win.fqPolyfill,
 		dataSets = [],
 		helpers = win.helpers;
 
@@ -130,7 +130,7 @@
 		},
 		testResult: function(result) {
 			var value = result.getValue(),
-				expected = !!Modernizr.testProp('mozTransition');
+				expected = !!Modernizr.testProp('MozTransition');
 
 			q.deepEqual(value, expected, ((expected === false) ? 'lack of ' : '') + '-moz-transition support properly detected');
 		}
@@ -2484,8 +2484,23 @@
 
 	q.module('global object');
 	q.test('existence of global object', function() {
-		q.ok(typeof polyfill === 'object', 'window._fqPolyfill object exists');
+		q.ok(typeof polyfill === 'object', 'window.fqPolyfill object exists');
 	});
+	q.test('method for adding tests', function() {
+		q.ok(typeof polyfill.addTest === 'function', 'method for adding tests exists');
+		
+		var dummy = function() {  };
+
+		polyfill.addTest(dummy);
+
+		q.deepEqual(polyfill.supportChecker.tests[polyfill.supportChecker.tests.length - 1], dummy, 'user can add custom tests');
+
+		polyfill.supportChecker.tests = polyfill.supportChecker.tests.filter(function(func) {
+			return (func !== dummy);
+		});
+
+	});
+
 
 
 	q.module('polyfills');
@@ -2496,7 +2511,7 @@
 
 	q.module('tokenizer');
 	q.test('existence of tokenizer and it\'s methods', function() {
-		q.ok(typeof polyfill.tokenizer === 'object', 'window._fqPolyfill.tokenizer object exists');
+		q.ok(typeof polyfill.tokenizer === 'object', 'window.fqPolyfill.tokenizer object exists');
 		q.ok(typeof polyfill.tokenizer.tokenize === 'function', 'tokenizer has tokenize function');
 	});
 
@@ -2513,7 +2528,7 @@
 
 	q.module('parser');
 	q.test('existence of parser and it\'s methods', function() {
-		q.ok(typeof polyfill.parser === 'object', 'window._fqPolyfill.parser object exists');
+		q.ok(typeof polyfill.parser === 'object', 'window.fqPolyfill.parser object exists');
 		q.ok(typeof polyfill.parser.parse === 'function', 'parser has parse function');
 	});
 
