@@ -1,11 +1,12 @@
 /*
- * Feature Queries (@supports) polyfill v0.8
+ * Feature Queries (@supports) polyfill
  *
  *
  * Drop-in polyfill for window.CSS.supports and @supports CSS rules
  * Licensed MIT
  *
  * @author Krystian Jarmicki
+ * @version 0.8.1
  * @preserve
  */
 
@@ -74,7 +75,7 @@
 			this.checker.augmentJS();
 		}
 
-		if(!this.checker.supportsCSS() || true) {
+		if(!this.checker.supportsCSS()) {
 			this.checker.watchCSS();
 		}
 

@@ -40,10 +40,11 @@ Use ```window.fqPolyfill.addTest``` for that.
 This method takes one argument, which is a callback function. That function recieves one argument, an object, with following properties:
 ```javascript
 {
-	testElem: reference to <div> element injected into document body with declaration styles to test (ie. ```document.createElement('div').style.cssText = 'background-color: rgba(0,0,0,.3)'```),
-	declarationName: name of the tested declaration (ie. ```background-color```),
-	camelDeclarationName: as above, but camelCased (ie. ```backgroundColor```),
-	declarationValue: value of the tested declaration (ie. ```rgba(0,0,0,.3)```)
+	testElem: object // reference to <div> element injected into body with declaration styles
+	// (ie. document.createElement('div').style.cssText = 'background-color: rgba(0,0,0,.3)'),
+	declarationName: string // name of the tested declaration (ie. background-color),
+	camelDeclarationName: string // as above, but camelCased (ie. backgroundColor),
+	declarationValue: string // value of the tested declaration (ie. rgba(0,0,0,.3))
 }
 ```
 Callback function should return one of 3 values:
@@ -55,9 +56,10 @@ Whole example goes like this:
 ```javascript
 fqPolyfill.addTest(function(data) {
 	if(data.declarationValue.indexOf('rgba(') !== -1) { 
-		return data.testElem.style[data.camelDeclarationName].indexOf('rgba(') !== -1; // returns true or false if declaration has 'rgba(' string
+		// returns true or false if declaration has 'rgba(' string
+		return data.testElem.style[data.camelDeclarationName].indexOf('rgba(') !== -1;
 	}
-	// returns undefined if it doesn't
+	// returns undefined if declaration doesn't include 'rgba(' string
 });
 ```
 
